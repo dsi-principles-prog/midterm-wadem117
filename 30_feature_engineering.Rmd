@@ -1,0 +1,86 @@
+---
+title: "30_feature_engineering"
+output: html_notebook
+---
+
+## Create features to generate and improve model 
+
+### Day of week 
+
+NHL games occur most frequently on Tuesdays, Thursdays, and Saturdays. However, there is typically at least one game on every night during the season. It's possible that there is some affect on scoring based on which day of the week the game occurs on. 
+
+Using information from the "date" column, I need to add another column that lists the day of the week of each game. 
+
+```{r add day of week column}
+
+```
+
+### Convert raw values to rates per sixty minutes
+
+This dataset contains exclusively raw values and percentages. Each non-percentage numeric column represents the total number of that metric produced by the corresponding team in the corresponding game. The "toi" value is context that should be factored into every value, though. It's not very helpful to compare values when one resulted from significantly more time on ice (toi) than the other. 
+
+A common way for hockey statisticians to standardize based on time on ice is referred to as "per 60 (minutes)" stats. Converting raw values into per 60 is quite simple: 
+
+*value per 60 = (raw value/toi) x 60*
+
+I need to add columns which include the following variables as per-60 rates: 
+
+differential, cf, ca, ff, fa, sf, sa, gf, ga, xgf, xga, scf, sca, hdcf, hdca, hdsf, hdsa, hdgf, hdga, mdcf, mdca, mdsf, mdsa, mdgf, mdga, ldcf, ldca, ldsf, ldsa, ldgf, and ldga.
+
+For example, say the Nashville Predators played a game with 50 minutes of five-on-five toi. In that time, they produced 30 cf. Converting to cf per 60 is easy:
+
+*(raw value/toi) x 60 = value per 60*
+
+*(30 cf/50 toi) x 60 = 36 cf per 60*
+
+```{r convert to per-60 rates}
+
+```
+
+### Make save percentage columns more useful
+
+Save percentage and shooting percentage are important values when analyzing hockey. Save percentage (SV%) refers to the number of saves made divided by the number of shots allowed by a team. Typically, these hover around 90% on average. 
+
+SV% = (shots faced - goals allowed) / shots faced 
+
+Shooting percentage (SH%) is exactly the opposite: the number of goals scored divided by shots produced by a team. These average around 10%. 
+
+SH% = goals scored / shots produced
+
+It is often helpful to compare these values. However, you first need to convert save percentage into the following format:
+
+SV% (adjusted) = 100 - SV% (raw)
+
+Let's go ahead and make that adjustment.
+
+```{r adjust sv column}
+sv_adj <- function(x, na.rm = TRUE) 100-x 
+
+games <- games %>%
+  mutate_at(vars(contains("sv")), list(adj=sv_adj))
+
+head(games)
+```
+
+### Make attendance more meaningful 
+
+One interesting variable tracked in this dataset is attendance for each game. Naturally, though, different arenas have different capacities. It is not necessarily informative to compare attendance directly across teams. 
+
+It is somewhat more interesting to compare each game's attendance to that team's season average. 
+
+```{r scale attendance}
+scale1 <- function(x, na.rm=FALSE) (x-mean(x, na.rm=na.rm))/sd(x,na.rm=na.rm)
+
+by_team <- function(df, vars) {
+  df %>% 
+    group_by(team) %>% 
+    mutate_at(vars, list(attendance_std = scale1)) %>% 
+    ungroup()
+}
+
+games <- games %>% 
+  by_team("attendance")
+
+summary(games$attendance_std)
+```
+
