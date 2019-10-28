@@ -84,3 +84,11 @@ games <- games %>%
 summary(games$attendance_std)
 ```
 
+Now, let's make sure these features were applied correctly. 
+
+```{r check features}
+games %>% 
+  assert(within_bounds(0,.2), contains("percent_adj")) %>% 
+  assert(within_bounds(-10,10), attendance_std)
+```
+

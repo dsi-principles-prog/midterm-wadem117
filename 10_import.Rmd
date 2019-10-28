@@ -5,6 +5,7 @@ output: html_notebook
 
 # Necessary libraries
 
+I will need the following libraries: 
 ```{r load libraries}
 library(tidyverse)
 library(janitor)
@@ -15,9 +16,20 @@ library(lubridate)
 
 # Import data
 
-```{r import csv and filter out unnecessary columns}
-games <-read_csv("Games - Natural Stat TrickTeam Season Totals - Natural Stat Trick (1).csv") %>%
+This dataest comes from www.naturalstattrick.com, a publicly available repository for National Hockey League stats. This particular dataset includes team-level information from every regular season NHL game during the 2018-2019 season. More information about each variable can be found in the README2 document. 
+
+My overall question here is simple: what on-ice actions most strongly affect goals produced? 
+
+```{r import csv and clean names}
+games <- read_csv("data/Games - Natural Stat TrickTeam Season Totals - Natural Stat Trick (1).csv") %>%
   clean_names()
+```
+
+# What are the properties of this dataset?
+
+I need to check the general structure of the dataset, as well as determine the class of each column. 
+```{r check data structure}
+str(games)
 ```
 
 # Are there any errors in the data?
@@ -56,9 +68,12 @@ One benefit of this dataset is that there should never be a negative value. I ne
 
 Additionally, a regulation NHL game has a duration of sixty minutes. This dataset only includes data from five-on-five situations (in some circumstances, one or both teams will have more or fewer than five players on the ice). Therefore, no "toi" (time on ice) value should be more than 60. I can also assume that no game is ever in non-five-on-five situations more than 50% of the time. I need to make sure this is indeed the case.
 
+Finally, I need to make sure that all of the percentage columns are between 0 and 100, unless missing. 
+
 ```{r check with assert}
 games %>% 
-  assert(within_bounds(0,Inf),toi:attendance) %>% 
-  assert(within_bounds(30,60))
+  assert(within_bounds(0,Inf), toi:attendance) %>% 
+  assert(within_bounds(30,60), toi) %>% 
+  assert(within_bounds(0,100), contains("percent"))
 ```
 

@@ -1,0 +1,28 @@
+---
+title: "40_model_preparation"
+output: html_notebook
+---
+
+# Prepare data for modeling 
+
+The dataset is now ready for modeling. To make things easier in the future, I will go ahead and move the "gf" and "ga" columns towards the left side of the dataset, since they are really my target variables. 
+
+Keep in mind, the "score" column will not necessarily match the gf and ga columns, as the former is the score from the total 60+ time on ice, and the gf and ga values are only from time when the teams each had five skaters present. 
+
+```{r move gf and ga to left}
+games <- games %>% 
+  select(date, team, gf, ga, everything())
+```
+
+Finally, let's take another look at the data. 
+```{r look at data again}
+head(games)
+```
+
+There are many options for which variables one would include in a model. A few examples: 
+
+1. The effect of shot quality (high-, mid-, or low-danger) in predicting goals for and against each team. 
+
+2. Is PDO (shooting percentage + save percentage and a common measure of "luck") indeed the most important factor in winning a game?
+
+3. The effect (if any) of things like attendance and time of year on on-ice performance. 
