@@ -12,7 +12,21 @@ NHL games occur most frequently on Tuesdays, Thursdays, and Saturdays. However, 
 Using information from the "date" column, I need to add another column that lists the day of the week of each game. 
 
 ```{r add day of week column}
+day_of_week <- function(date) {
+  wday(date,label=T)
+}
 
+```
+
+```{r applying function to get day_of_week}
+games<- games %>%
+  mutate(day_of_week = day_of_week(games$date))%>%
+  select(date,day_of_week,everything())
+```
+
+```{r checking the newly formed function to be in set}
+games%>%
+  assert(in_set("Mon","Tue","Wed","Thu","Fri","Sat","Sun"),day_of_week)
 ```
 
 ### Convert raw values to rates per sixty minutes
@@ -33,9 +47,18 @@ For example, say the Nashville Predators played a game with 50 minutes of five-o
 
 *(30 cf/50 toi) x 60 = 36 cf per 60*
 
-```{r convert to per-60 rates}
-
+```{r defining function for per_60}
+value_per_60 <- function (x,na.rm=T){
+  (x/games$toi)*60
+}
 ```
+
+```{r applying function}
+games<-games %>%
+  select(date,day_of_week,score, team, attendance, pdo, toi, contains("percent"), everything())%>%
+  mutate_at(vars(cf:ldga), list(per_60=value_per_60))
+```
+
 
 ### Make save percentage columns more useful
 
